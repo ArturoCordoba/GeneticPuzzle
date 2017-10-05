@@ -3,7 +3,7 @@ project(GeneticPuzzle)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES main.cpp List.cpp List.h Class1.cpp Class1.h)
+set(SOURCE_FILES main.cpp)
 add_executable(GeneticPuzzle ${SOURCE_FILES})
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
