@@ -11,4 +11,5 @@ class Class1 {
 };
 
 
+
 #endif //GENETICPUZZLE_CLASS1_H
