@@ -4,7 +4,6 @@
 #include "UtilityProgram.h"
 #include "Piece.h"
 
-
 std::vector <std::vector<int>> puzzleMap;
 std::vector <int> tempMap;
 
@@ -128,12 +127,14 @@ void loadFitness(Matrix<int>* matrix)
         }
     }
     sortFitness(listFitness);
+    /*
     for(int x = 0; x < listFitness->getSize(); x++)
     {
         cout << "Value: " << listFitness->getDataPos(x)->getData() << endl;
         cout << "Fitness: " << listFitness->getDataPos(x)->getH() << endl;
         cout << endl;
     }
+     */
 }
 
 Matrix<int>* crossover(Matrix<int>* matrix, List<MatrixNode<int>*>* list)
@@ -157,9 +158,9 @@ void mutation(int numPieces, Matrix<int>* matrix)
     int mutation;
     srand(time(NULL));
     mutation = (rand() % 100);
-    cout << "Mutation: " << mutation << endl;
+    //cout << "Mutation: " << mutation << endl;
 
-    if(mutation <= 10)
+    if(mutation <= 20)
     {
         //Mutate
         int number1;
@@ -177,12 +178,12 @@ void mutation(int numPieces, Matrix<int>* matrix)
             }
         }
 
-        cout << "Number1: " << number1 << endl;
-        cout << "Number2: " << number2 << endl;
+        //cout << "Number1: " << number1 << endl;
+        //cout << "Number2: " << number2 << endl;
 
         listMutations->addData(number1);
-        cout << "Mutation List: " << endl;
-        listMutations->print();
+        //cout << "Mutation List: " << endl;
+        //listMutations->print();
 
         int position1 = matrix->getNodeData(matrix, number1)->getData();
         int position2 = matrix->getNodeData(matrix, number2)->getData();
@@ -216,23 +217,26 @@ void loadPuzzle(Matrix<int>* matrix)
 void windowGeneticPuzzle(Matrix<int>* matrix, int numPieces)
 {
     //Create the window
-    sf::RenderWindow window(sf::VideoMode(dimensionX*3,dimensionY+50,32), "Genetic Puzzle");
+    sf::RenderWindow window(sf::VideoMode(dimensionX*3,dimensionY+75,32), "Genetic Puzzle");
     window.setVerticalSyncEnabled(true);
 
     //Adds the matrix generation to the list of generation
     listGenerations->addData(matrix);
 
+    int limitGenerations = numPieces * 50;
+    //cout << limitGenerations << endl;
+    int same = 0;
 
     //Calculates the function fitness of the actual generation
     int generation = 0;
 
-    cout << "Generation: " << generation << endl;
-    listGenerations->getDataPos(generation)->printMatrix();
-    cout << endl;
+    //cout << "Generation: " << generation << endl;
+    //listGenerations->getDataPos(generation)->printMatrix();
+    //cout << endl;
 
-    cout << "Fitness Generacion: " << generation << endl;
+    //cout << "Fitness Generacion: " << generation << endl;
     loadFitness(listGenerations->getDataPos(generation));
-    cout << endl;
+    //cout << endl;
 
     while (window.isOpen())
     {
@@ -259,94 +263,104 @@ void windowGeneticPuzzle(Matrix<int>* matrix, int numPieces)
                             listMutations = new List<int>();
                         }
                         mutation(numPieces,matrix);
-                        cout << "# List Mutation: ";
-                        cout << listMutations->getSize() << endl;
+                        //cout << "# List Mutation: ";
+                        //cout << listMutations->getSize() << endl;
 
                         //Adds new generation
                         listGenerations->addData(matrix);
-                        cout << "# Generations: " << listGenerations->getSize() << endl;
+                        //cout << "# Generations: " << listGenerations->getSize() << endl;
                         generation++;
-                        cout << "Generation: " << generation << endl;
-                        matrix->printMatrix();
-                        cout << endl;
+                        //cout << "Generation: " << generation << endl;
+                        //matrix->printMatrix();
+                        //cout << endl;
 
                         //Calculates the function fitness of the new generation
                         listFitness->delAll();
                         listFitness = new List<MatrixNode<int>*>();
-                        cout << "Fitness Generacion: " << generation << endl;
+                        //cout << "Fitness Generacion: " << generation << endl;
                         loadFitness(listGenerations->getDataPos(generation));
-                        cout << endl;
+                        //cout << endl;
                     }
                     break;
             }
-        }
-        //Load the Map
-        loadPuzzle(listGenerations->getDataPos(generation));
 
-        //Draw the generation text
+            //Load the Map
+            loadPuzzle(listGenerations->getDataPos(generation));
+
+            //Draw the generation text
 
 
-        //Draw the Puzzle Map
-        window.clear(sf::Color::Black);
+            //Draw the Puzzle Map
+            window.clear(sf::Color::Black);
 
-        float row = dimensionX / matrix->getCols();
-        float col = dimensionY / matrix->getRows();
+            float row = dimensionX / matrix->getCols();
+            float col = dimensionY / matrix->getRows();
 
-        for(int i = 0; i < puzzleMap.size(); i++)
-        {
-            for(int j = 0; j < puzzleMap[i].size(); j++)
+            for (int i = 0; i < puzzleMap.size(); i++) {
+                for (int j = 0; j < puzzleMap[i].size(); j++) {
+                    sf::Vector2f positionMap = sf::Vector2f(j * row, i * col);
+                    sf::Vector2f rect = sf::Vector2f(row, col);
+                    sf::Vector2f positionRect = listPosImages->getDataPos(puzzleMap[i][j]);
+                    Piece *p = new Piece(positionMap, puzzleTexture, rect, positionRect);
+                    window.draw(p->piece);
+
+                    /*
+                    cout << "Value: " << puzzleMap[i][j] << endl;
+                    cout << "PositionMap: " <<  positionMap.x << "," << positionMap.y << endl;
+                    cout << "PosRect:" << positionRect.x << "," << positionRect.y << endl;
+                    cout << "Rect: " << row << "," << col << endl;
+                    cout << endl;
+                    */
+                }
+            }
+
+            //Draw the selection text
+
+            //Draw the selected individuals
+            sf::Vector2f posMapSel1 = sf::Vector2f(dimensionX + dimensionX / 2, 100);
+            sf::Vector2f posMapSel2 = sf::Vector2f(dimensionX + dimensionX / 2 + row + 10, 100);
+            sf::Vector2f posMapSel3 = sf::Vector2f(dimensionX + dimensionX / 2 + 2 * row + 20, 100);
+
+            sf::Vector2f rectSel = sf::Vector2f(row, col);
+
+            sf::Vector2f posRectSel1 = sf::Vector2f(
+                    listPosImages->getDataPos(listFitness->getDataPos(0)->getData()));
+            sf::Vector2f posRectSel2 = sf::Vector2f(
+                    listPosImages->getDataPos(listFitness->getDataPos(1)->getData()));
+            sf::Vector2f posRectSel3 = sf::Vector2f(
+                    listPosImages->getDataPos(listFitness->getDataPos(2)->getData()));
+
+            Piece *pSel1 = new Piece(posMapSel1, puzzleTexture, rectSel, posRectSel1);
+            Piece *pSel2 = new Piece(posMapSel2, puzzleTexture, rectSel, posRectSel2);
+            Piece *pSel3 = new Piece(posMapSel3, puzzleTexture, rectSel, posRectSel3);
+
+            window.draw(pSel1->piece);
+            window.draw(pSel2->piece);
+            window.draw(pSel3->piece);
+
+            window.display();
+
+            //Close the window if it gets to the solution or the limit of generation is achieved
+            same = 0;
+            for(int x = 0; x < listFitness->getSize(); x++)
             {
-                sf::Vector2f positionMap = sf::Vector2f(j*row,i*col);
-                sf::Vector2f rect = sf::Vector2f(row,col);
-                sf::Vector2f positionRect = listPosImages->getDataPos(puzzleMap[i][j]);
-                Piece *p = new Piece(positionMap, puzzleTexture, rect, positionRect);
-                window.draw(p->piece);
+                if(listFitness->getDataPos(x)->getH() == 0)
+                    same++;
+            }
 
-                /*
-                cout << "Value: " << puzzleMap[i][j] << endl;
-                cout << "PositionMap: " <<  positionMap.x << "," << positionMap.y << endl;
-                cout << "PosRect:" << positionRect.x << "," << positionRect.y << endl;
-                cout << "Rect: " << row << "," << col << endl;
-                cout << endl;
-                */
+            //cout << "Same: " << same << endl;
+            if(same == numPieces)
+            {
+                cout << "La imagen ha sido ordenada exitosamente!" << endl;
+                //window.close();
+            }
+
+            if(listGenerations->getSize() == limitGenerations )
+            {
+                cout << "El limite de generaciones ha sido alcanzado!" << endl;
+                //window.close();
             }
         }
-
-        //Draw the selection text
-
-        //Draw the selected individuals
-        sf::Vector2f posMapSel1 = sf::Vector2f(dimensionX + dimensionX/4 , 50);
-        sf::Vector2f posMapSel2 = sf::Vector2f(dimensionX + dimensionX/4 + row + 10, 50);
-        sf::Vector2f posMapSel3 = sf::Vector2f(dimensionX + dimensionX/4 + 2*row + 20 , 50);
-
-        sf::Vector2f rectSel = sf::Vector2f(row,col);
-
-        sf::Vector2f posRectSel1 = sf::Vector2f(listPosImages->getDataPos(listFitness->getDataPos(0)->getData()));
-        sf::Vector2f posRectSel2 = sf::Vector2f(listPosImages->getDataPos(listFitness->getDataPos(1)->getData()));
-        sf::Vector2f posRectSel3 = sf::Vector2f(listPosImages->getDataPos(listFitness->getDataPos(2)->getData()));
-
-        Piece *pSel1 = new Piece(posMapSel1, puzzleTexture, rectSel, posRectSel1);
-        Piece *pSel2 = new Piece(posMapSel2, puzzleTexture, rectSel, posRectSel2);
-        Piece *pSel3 = new Piece(posMapSel3, puzzleTexture, rectSel, posRectSel3);
-
-        window.draw(pSel1->piece);
-        window.draw(pSel2->piece);
-        window.draw(pSel3->piece);
-
-        //Draw the mutation text
-
-        //Draw the mutation individual
-        if(listMutations->getSize() != 0)
-        {
-            sf::Vector2f posMapMut = sf::Vector2f(dimensionX + dimensionX, dimensionY + 60);
-            sf::Vector2f rectMut = sf::Vector2f(row, col);
-            sf::Vector2f posRectMut = sf::Vector2f(listPosImages->getDataPos(listMutations->getDataPos(0)));
-
-            Piece *pMut = new Piece(posMapMut, puzzleTexture, rectMut, posRectMut);
-
-            window.draw(pMut->piece);
-        }
-        window.display();
     }
 }
 
@@ -358,6 +372,9 @@ int main(int argc, char const *argv[])
     std::string image1 = "Monalisa.jpg";
     std::string image2 = "Yo.png";
 
+    std::cout << "Ingrese el numero de partes que desea dividir la imagen:" << std::endl;
+    std::cin >> numPieces;
+    /*
     while(!done) {
         int divider = 1, dividers = 0;
         std::cout << "Ingrese el numero de partes que desea dividir la imagen:" << std::endl;
@@ -377,6 +394,8 @@ int main(int argc, char const *argv[])
             done = true;
         }
     }
+     */
+    matrix = utility(numPieces, matrix);
     loadPosFitness(matrix);
 
     loadImages(image1, numPieces, matrix->getRows(), matrix->getCols());
