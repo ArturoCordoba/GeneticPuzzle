@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <opencv2/opencv.hpp>
+#include <zconf.h>
+#include <thread>
 
 #include "UtilityProgram.h"
 #include "Piece.h"
@@ -18,6 +20,7 @@ float dimensionX;
 float dimensionY;
 const int fps = 25;
 
+///Function that open the webcam device
 void webcam()
 {
     cv::Mat frame;
@@ -37,7 +40,12 @@ void webcam()
     }
 }
 
-void loadImages(std::string image, int numPieces, int rows, int cols)
+/// Function that loads the images
+/// \param image
+/// \param numPieces
+/// \param rows
+/// \param cols
+void loadImages(std::string image, int rows, int cols)
 {
     //Load the texture of the image
     puzzleTexture.loadFromFile(image);
@@ -65,7 +73,8 @@ void loadImages(std::string image, int numPieces, int rows, int cols)
     }
     */
 }
-
+/// Function that load the position fitness of the images
+/// \param matrix
 void loadPosFitness(Matrix<int>* matrix)
 {
     for(int i = 0; i < matrix->getRows(); i++)
@@ -84,6 +93,9 @@ void loadPosFitness(Matrix<int>* matrix)
     cout << endl;
      */
 }
+
+/// Function thats sorts the list of fitness
+/// \param list
 void sortFitness(List<MatrixNode<int>*>* list)
 {
     MatrixNode<int> *tempData;
@@ -108,6 +120,8 @@ void sortFitness(List<MatrixNode<int>*>* list)
     }
 }
 
+/// Function that calculates the fitness of each individual
+/// \param matrix
 void loadFitness(Matrix<int>* matrix)
 {
     int position;
@@ -137,6 +151,10 @@ void loadFitness(Matrix<int>* matrix)
      */
 }
 
+/// Function that changes the position of the selected individuals
+/// \param matrix
+/// \param list
+/// \return
 Matrix<int>* crossover(Matrix<int>* matrix, List<MatrixNode<int>*>* list)
 {
     int position1 = matrix->getNodeData(matrix,list->getDataPos(0)->getData())->getData();
@@ -153,6 +171,9 @@ Matrix<int>* crossover(Matrix<int>* matrix, List<MatrixNode<int>*>* list)
     return matrix;
 }
 
+/// Function that mutates an individual
+/// \param numPieces
+/// \param matrix
 void mutation(int numPieces, Matrix<int>* matrix)
 {
     int mutation;
@@ -160,7 +181,7 @@ void mutation(int numPieces, Matrix<int>* matrix)
     mutation = (rand() % 100);
     //cout << "Mutation: " << mutation << endl;
 
-    if(mutation <= 20)
+    if(mutation <= 30)
     {
         //Mutate
         int number1;
@@ -214,16 +235,22 @@ void loadPuzzle(Matrix<int>* matrix)
     }
 }
 
-void windowGeneticPuzzle(Matrix<int>* matrix, int numPieces)
+/// Function that loads the interface of the genetic puzzle
+/// \param matrix
+/// \param numPieces
+/// \param primo
+void windowGeneticPuzzle(Matrix<int>* matrix, int numPieces, bool primo)
 {
     //Create the window
-    sf::RenderWindow window(sf::VideoMode(dimensionX*3,dimensionY+75,32), "Genetic Puzzle");
+    sf::RenderWindow window(sf::VideoMode(dimensionX*3,dimensionY+100,32), "Genetic Puzzle");
     window.setVerticalSyncEnabled(true);
+    sf::Font font;
+    font.loadFromFile("Ubuntu-M.ttf");
 
     //Adds the matrix generation to the list of generation
     listGenerations->addData(matrix);
 
-    int limitGenerations = numPieces * 50;
+    int limitGenerations = numPieces * 75;
     //cout << limitGenerations << endl;
     int same = 0;
 
@@ -237,6 +264,10 @@ void windowGeneticPuzzle(Matrix<int>* matrix, int numPieces)
     //cout << "Fitness Generacion: " << generation << endl;
     loadFitness(listGenerations->getDataPos(generation));
     //cout << endl;
+
+    sf::Vector2f posMapSel1;
+    sf::Vector2f posMapSel2;
+    sf::Vector2f posMapSel3;
 
     while (window.isOpen())
     {
@@ -314,12 +345,38 @@ void windowGeneticPuzzle(Matrix<int>* matrix, int numPieces)
                 }
             }
 
+            //Draw the generation text
+            sf::Text textGeneration;
+            textGeneration.setFont(font);
+            std::string textG = std::to_string(generation);
+            textGeneration.setString("Generacion: " + textG);
+            textGeneration.setCharacterSize(40);
+            textGeneration.setPosition(dimensionX/4, dimensionY+30);
+            window.draw(textGeneration);
+
             //Draw the selection text
+            sf::Text textSelection;
+            textSelection.setFont(font);
+            textSelection.setString("Seleccion:");
+            textSelection.setCharacterSize(40);
+            textSelection.setPosition(dimensionX + dimensionX/2, 30);
+            window.draw(textSelection);
 
             //Draw the selected individuals
-            sf::Vector2f posMapSel1 = sf::Vector2f(dimensionX + dimensionX / 2, 100);
-            sf::Vector2f posMapSel2 = sf::Vector2f(dimensionX + dimensionX / 2 + row + 10, 100);
-            sf::Vector2f posMapSel3 = sf::Vector2f(dimensionX + dimensionX / 2 + 2 * row + 20, 100);
+            if(primo == true)
+            {
+                posMapSel1 = sf::Vector2f(dimensionX + dimensionX / 2, 100);
+                posMapSel2 = sf::Vector2f(dimensionX + dimensionX / 2, 100 + col + 10);
+                posMapSel3 = sf::Vector2f(dimensionX + dimensionX / 2, 100 + 2 * col + 20);
+            } else if( numPieces <= 10 || numPieces == 14){
+                posMapSel1 = sf::Vector2f(dimensionX + dimensionX / 4, 100);
+                posMapSel2 = sf::Vector2f(dimensionX + dimensionX / 4 + row + 10, 100);
+                posMapSel3 = sf::Vector2f(dimensionX + dimensionX / 4 + 2 * row + 20, 100);
+            } else {
+                posMapSel1 = sf::Vector2f(dimensionX + dimensionX / 2, 100);
+                posMapSel2 = sf::Vector2f(dimensionX + dimensionX / 2 + row + 10, 100);
+                posMapSel3 = sf::Vector2f(dimensionX + dimensionX / 2 + 2 * row + 20, 100);
+            }
 
             sf::Vector2f rectSel = sf::Vector2f(row, col);
 
@@ -351,55 +408,74 @@ void windowGeneticPuzzle(Matrix<int>* matrix, int numPieces)
             //cout << "Same: " << same << endl;
             if(same == numPieces)
             {
-                cout << "La imagen ha sido ordenada exitosamente!" << endl;
-                //window.close();
+                cout << "La imagen ha sido ordenada exitosamente! En: " << generation << " generaciones" << endl;
+                sleep(3);
+                window.close();
             }
 
             if(listGenerations->getSize() == limitGenerations )
             {
                 cout << "El limite de generaciones ha sido alcanzado!" << endl;
-                //window.close();
+                sleep(3);
+                window.close();
             }
         }
     }
 }
 
+///Main program
 int main(int argc, char const *argv[])
 {
     Matrix<int> *matrix;
     int numPieces;
+    int option;
     bool done = false;
-    std::string image1 = "Monalisa.jpg";
-    std::string image2 = "Yo.png";
+    bool primo = false;
+    std::string image;
 
-    std::cout << "Ingrese el numero de partes que desea dividir la imagen:" << std::endl;
-    std::cin >> numPieces;
-    /*
-    while(!done) {
-        int divider = 1, dividers = 0;
+    cout << "Rompecabezas Genetico\n" << endl;
+    cout << "1 - Monalisa" << endl;
+    cout << "2 - Webcam" << endl;
+    cout << "3 - Salir" << endl;
+    cout << "Seleccione una imagen: " << endl;
+    cin >> option;
+
+    if(option == 1) {
+        image = "Monalisa.jpg";
         std::cout << "Ingrese el numero de partes que desea dividir la imagen:" << std::endl;
         std::cin >> numPieces;
+    } else if(option == 2){
+        std::thread w1(webcam);
+        w1.detach();
+        cout << "Ingrese el nombre del archivo de la imagen:" << endl;
+        cin >> image;
+        std::cout << "Ingrese el numero de partes que desea dividir la imagen:" << std::endl;
+        std::cin >> numPieces;
+    } else if(option == 3) {
+        cout << "Adios!" << endl;
+    }
 
+    while (!primo) {
+        int divider = 1, dividers = 0;
         do {
             if (numPieces % divider == 0)
                 dividers++;
             divider++;
         } while (divider <= numPieces);
 
-        if (dividers == 2)
-            std::cout << "El numero ingresado es primo. Intente de nuevo" << std::endl;
-        else {
-            //El numero ingresado no es primo
-            matrix = utility(numPieces, matrix);
-            done = true;
+        if (dividers == 2) {
+            //std::cout << "El numero ingresado es primo. Intente de nuevo" << std::endl;
+            primo = true;
         }
+        break;
     }
-     */
+
     matrix = utility(numPieces, matrix);
     loadPosFitness(matrix);
 
-    loadImages(image1, numPieces, matrix->getRows(), matrix->getCols());
+    loadImages(image, matrix->getRows(), matrix->getCols());
 
-    windowGeneticPuzzle(matrix,numPieces);
+    windowGeneticPuzzle(matrix, numPieces, primo);
+
     return 0;
 }
